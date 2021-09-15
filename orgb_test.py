@@ -3,8 +3,7 @@ import hid, time
 hi = hid.device()
 
 for dev in hid.enumerate():
-    # change your device here
-    if dev['product_string'] == 'GMMK FULL' and dev['interface_number'] == 1:
+    if dev['usage'] == 97:
         path = dev['path']
         print(dev, path)
         break
