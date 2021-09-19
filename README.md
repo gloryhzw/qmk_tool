@@ -10,4 +10,4 @@ Notes
 | Feature       | RAM           | Comment |  Idea |
 | ------------- | ------------- |---------| ------|
 | CONSOLE_ENABLE  | 216  | OUT/IN CAP = 1 | use RAW IN for console |
-| Content Cell  | Content Cell  ||
+| NKRO_ENABLE  | 56  ||
