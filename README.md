@@ -21,6 +21,10 @@ python sonix_swd_flash.py 0 0x200 e:\work\KEYBOARD\QMK_jumploader-gmmk_ansi_512.
 2. CRC check and verify
 
 
+
+
+
+
 QMK Feature RAM table
 | Feature       | RAM           | Comment |  Idea |
 | ------------- | ------------- |---------| ------|
