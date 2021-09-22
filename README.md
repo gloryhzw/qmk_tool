@@ -27,7 +27,7 @@ python sonix_swd_flash.py 0x7800 0x800 26x_bootloader_0x7800.bin --openocd 127.0
 
 
 
-
+------------
 
 
 QMK Feature RAM table
