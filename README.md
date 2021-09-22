@@ -14,7 +14,12 @@ sonix_swd_flash.py [start address] [size] [file] --openocd [host]:[ip]
 
 [example]
 
-python sonix_swd_flash.py 0 0x200 e:\work\KEYBOARD\QMK_jumploader-gmmk_ansi_512.bin --openocd 127.0.0.1:4444
+// flash the jumploader
+python sonix_swd_flash.py 0 0x200 QMK_jumploader-gmmk_ansi_512.bin --openocd 127.0.0.1:4444
+
+// flash the 26x boot loader 0x7800~0x8000
+python sonix_swd_flash.py 0x7800 0x800 26x_bootloader_0x7800.bin --openocd 127.0.0.1:4444
+
 
 [TODO]
 1. Faster
