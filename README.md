@@ -7,9 +7,11 @@ QMK related work
 * sonix_swd_flash.py: a sonix SWD flasher based on openocd. !!!DONT TRY THIS UNLESS U KNOW WHAT U R DOING!!!
 Usage:
 [usage]
+
 sonix_swd_flash.py [start address] [size] [file] --openocd [host]:[ip]
 
 [example]
+
 python sonix_swd_flash.py 0 0x200 e:\work\KEYBOARD\QMK_jumploader-gmmk_ansi_512.bin --openocd 127.0.0.1:4444
 
 
