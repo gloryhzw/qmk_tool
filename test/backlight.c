@@ -30,7 +30,7 @@
 #define I2C_SDA_LO do { setPinOutput(I2C_SDA); writePinLow(I2C_SDA); } while (0)
 #define I2C_SDA_HIZ setPinInputHigh(I2C_SDA)
 
-#define I2C_DELAY   for (int32_t i = 0; i < 10; i++);
+#define I2C_DELAY   for (int32_t i = 0; i < 8; i++);
 
 static uint8_t  i2c_byte_ct = 0;
 static uint8_t  i2c_addr_rw = 0;
@@ -56,16 +56,23 @@ static inline void i2c_process_bit(void)
     }
 
     i2c_tx_byte = i2c_tx_byte << 1;
+    I2C_DELAY;
 
     I2C_SCL_HIZ;
+
     I2C_DELAY;
     
     I2C_SCL_LO;    
+
+    I2C_DELAY;    
 }
 
 static inline void i2c_transaction(void)
 {
     I2C_SDA_LO;
+    
+    I2C_DELAY;
+    
     I2C_SCL_LO;
 
     I2C_DELAY;
@@ -102,8 +109,8 @@ I2C_STATE_WRITE_BYTE:
 
 I2C_STATE_READ_ACK:
     I2C_SDA_HIZ;
+    I2C_DELAY;
     I2C_SCL_HIZ;
-
     I2C_DELAY;
 
 
@@ -115,20 +122,27 @@ I2C_STATE_READ_ACK:
             i2c_tx_byte = *i2c_data_ptr;
 
             I2C_SDA_LO;
+            I2C_DELAY;
             I2C_SCL_LO;
-
             I2C_DELAY;
 
             goto I2C_STATE_WRITE_BYTE;
         }
     }
+    
+    I2C_DELAY;
 
     I2C_SDA_LO;
+
+    I2C_DELAY;
+    
     I2C_SCL_LO;
 
     I2C_DELAY;
 
     I2C_SCL_HIZ;
+
+    I2C_DELAY;
     I2C_SDA_HIZ;
 
     I2C_DELAY;    
@@ -167,7 +181,7 @@ static void reset_rgb(int devid)
     i2c_write_reg(devid, 0x08, 0x00);
     i2c_write_reg(devid, 0x09, 0x00);
     i2c_write_reg(devid, 0x0B, 0x00);
-    i2c_write_reg(devid, 0x0D, 0x0F);
+    // i2c_write_reg(devid, 0x0D, 0x0F);
     i2c_write_reg(devid, 0x0E, 0x01);
     i2c_write_reg(devid, 0x14, 68);
     i2c_write_reg(devid, 0x15, 128);
@@ -195,8 +209,11 @@ static void reset_rgb(int devid)
  * LED index to RGB address
  * >=100 means it belongs to EE dev
  */
+// 3, 6, 9 notworking
+// 4, 5 flickering
+// 1, 2 ok
 static const uint8_t g_led_pos[DRIVER_LED_TOTAL] = {
-/* 0*/    0,   2,   3,   4,   5,   6,   7,   8,   9,  10,   11,  12,  13,  14,  15,  16,
+/* 0*/ 0xC0,0xC1,0xC2,0xC3,0xC4,0xC5,0xC6,0xC7,0xC8,0xC9, 0xCA,0xC0,0xC1,0xC2,0xC3,0xC4,
 /*16*/  100, 101, 102, 103, 104, 105, 106, 107, 108, 109,  110, 111, 112, 113,  21,  22,  23,  24,   25,   26,  27,   
 /*37*/  116, 117, 118, 119, 120, 121, 122, 123, 124, 125,  126, 127, 128, 129,  32,  33,  34,  35,   36,   37,  38, 
 /*58*/  132, 133, 134, 135, 136, 137, 138, 139, 140, 141,  142, 143, 145,  42,  43,  44,    
@@ -204,38 +221,47 @@ static const uint8_t g_led_pos[DRIVER_LED_TOTAL] = {
 /*91*/  114, 115, 130, 131, 146, 147, 162, 163,  55,  56,   57,  59,  60
 };
 
+// 1: 0xEE, 0: 0xE8
+static const uint8_t g_led_chip[DRIVER_LED_TOTAL] = {
+/* 0*/    1,   1,   1,   1,   1,   1,   1,   1,   1,   1,    1,   0,   0,  0,   0,    0,
+/*16*/  100, 101, 102, 103, 104, 105, 106, 107, 108, 109,  110, 111, 112, 113,  21,  22,  23,  24,   25,   26,  27,   
+/*37*/  116, 117, 118, 119, 120, 121, 122, 123, 124, 125,  126, 127, 128, 129,  32,  33,  34,  35,   36,   37,  38, 
+/*58*/  132, 133, 134, 135, 136, 137, 138, 139, 140, 141,  142, 143, 145,  42,  43,  44,    
+/*74*/  148, 150, 151, 152, 153, 154, 155, 156, 157,  158, 159, 161, 49,  51,  52,  53,  54,
+/*91*/  114, 115, 130, 131, 146, 147, 162, 163,  55,  56,   57,  59,  60    
+};
+
+
 static void set_pwm(uint8_t dev, uint8_t addr, uint8_t value)
 {
-    if (addr >= 0x80) {        
+    if (addr >= 0x80) {
         i2c_write_reg(dev, 0xFD, 1);
         addr -= 0x80;
     }        
     else
         i2c_write_reg(dev, 0xFD, 0);
         
-    i2c_write_reg(dev, addr, value);    
+    i2c_write_reg(dev, addr + 0x20, value);    
 }
 
 void _set_color(int index, uint8_t r, uint8_t g, uint8_t b)
 {
     uint8_t dev;
-    int l = g_led_pos[index];
+    int l = 0; 
 
-
-    if (l >= 100)
-    {
-        l -= 100;
-        dev = 0xEE;
+    // only first row 16 keys
+    if (index <= 15) {
+        if (g_led_chip[index])
+            dev = 0xEE;
+        else
+            dev = 0xE8;
+        l = g_led_pos[index];        
     }
     else
-        dev = 0xE8;
-    
-    // ESC key
-    l = 0xC0;
-    dev = 0xEE;
-
-    l += 0x20;
-    
+    {
+        return;
+    }
+        
     // r, g, b TBD
     set_pwm(dev, l, r);
     set_pwm(dev, l + 0x10, g);
