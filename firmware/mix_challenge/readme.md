@@ -1,3 +1,7 @@
+Goal
+
+Find the decryption method
+
 HINTS
 
 1. ARM MCU
